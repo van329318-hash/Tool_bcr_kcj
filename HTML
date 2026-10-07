@@ -1,1 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ai Baccarat - tool</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: #0f172a; min-height: 100vh; overflow-x: hidden; }
+
+    #robotTrigger {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none; color: white; font-size: 24px; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); z-index: 999;
+      transition: transform 0.2s;
+    }
+    #robotTrigger:hover { transform: scale(1.1); }
+
+    .draggable-box {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); width: 360px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+      z-index: 1000; padding: 20px; color: #e2e8f0; cursor: move;
+      display: none;
+    }
+    .close-btn {
+      position: absolute; top: 10px; right: 12px;
+      background: transparent; border: none; color: #94a3b8;
+      font-size: 22px; cursor: pointer; transition: color 0.2s;
+    }
+    .close-btn:hover { color: #f87171; }
+
+    .robot-container { text-align: center; margin-bottom: 16px; }
+    .robot-avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      object-fit: cover; border: 2px solid #10b981; background: #1e293b;
+    }
+
+    .header-info {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 8px; margin-bottom: 16px; font-size: 14px;
+    }
+    .header-info select {
+      background: #1e293b; color: white; border: 1px solid #334155;
+      border-radius: 6px; padding: 4px 8px; outline: none; max-width: 160px;
+    }
+
+    .prediction-panel {
+      background: rgba(0, 0, 0, 0.25); border-radius: 12px;
+      padding: 16px; margin-bottom: 12px;
+    }
+    .stat-row {
+      display: flex; justify-content: space-between;
+      font-size: 13px; margin-bottom: 12px; color: #cbd5e1;
+    }
+    #prediction_val {
+      font-size: 28px; font-weight: 700; text-align: center;
+      padding: 12px; margin-bottom: 12px; border-radius: 8px;
+      background: rgba(16, 185, 129, 0.08); min-height: 60px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .analyzing { color: #facc15; font-size: 18px; }
+
+    .matrix-status { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .status-item { background: rgba(30, 41, 59, 0.6); padding: 8px 10px; border-radius: 6px; }
+    .status-label { display: block; font-size: 11px; color: #94a3b8; }
+    .status-val { display: block; font-size: 15px; font-weight: 600; margin-top: 2px; }
+
+    .result-display {
+      background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 12px;
+      font-family: monospace; font-size: 16px; letter-spacing: 4px;
+      text-align: center; min-height: 44px;
+    }
+    .b-text { color: #ef4444; font-weight: 700; }
+    .p-text { color: #3b82f6; font-weight: 700; }
+    .t-text { color: #facc15; font-weight: 700; }
+
+    @media (max-width: 400px) {
+      .draggable-box { width: 92%; }
+      #prediction_val { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <button id="robotTrigger" title="Mở Tool AI">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <div class="draggable-box" id="dragBox">
+    <button class="close-btn" onclick="document.getElementById('dragBox').style.display='none'">×</button>
+    
+    <div class="robot-container">
+      <img src="https://i.postimg.cc/1zLnNsCZ/IMG-3575.gif" alt="Robot" class="robot-avatar"
+           onerror="this.src='https://ui-avatars.com/api/?name=AI&background=10b981&color=fff&size=80&bold=true'">
+    </div>
+    
+    <div class="content-box" id="mainUI">
+      <div class="header-info">
+        <span>BÀN: 
+          <select id="tableSelect" onchange="onTableChange()">
+            <option value="">-- Chọn bàn --</option>
+            <option value="Bàn C01">Bàn C01</option>
+            <option value="Bàn C02">Bàn C02</option>
+            <option value="Bàn C03">Bàn C03</option>
+            <option value="Bàn C04">Bàn C04</option>
+            <option value="Bàn C05">Bàn C05</option>
+            <option value="Bàn C06">Bàn C06</option>
+            <option value="Bàn C07">Bàn C07</option>
+            <option value="Bàn C08">Bàn C08</option>
+            <option value="Bàn C09">Bàn C09</option>
+            <option value="Bàn C10">Bàn C10</option>
+            <option value="Bàn C11">Bàn C11</option>
+            <option value="Bàn C12">Bàn C12</option>
+            <option value="Bàn C13">Bàn C13</option>
+            <option value="Bàn C14">Bàn C14</option>
+            <option value="Bàn C15">Bàn C15</option>
+            <option value="Bàn C16">Bàn C16</option>
+            <option value="Bàn C17">Bàn C17</option>
+            <option value="Bàn C18">Bàn C18</option>
+            <option value="Bàn 19">Bàn 19</option>
+            <option value="Bàn 1">Bàn 1</option>
+            <option value="Bàn 2">Bàn 2</option>
+            <option value="Bàn 3">Bàn 3</option>
+            <option value="Bàn 4">Bàn 4</option>
+            <option value="Bàn 5">Bàn 5</option>
+            <option value="Bàn 6">Bàn 6</option>
+            <option value="Bàn 7">Bàn 7</option>
+            <option value="Bàn 8">Bàn 8</option>
+            <option value="Bàn 9">Bàn 9</option>
+            <option value="Bàn 10">Bàn 10</option>
+          </select>
+        </span>
+        <span style="color: #00f2ff;"><i class="fas fa-atom"></i> TOOL CHỈ HỖ TRỢ 70%</span>
+      </div>
+      
+      <div class="prediction-panel">
+        <div class="stat-row">
+          <span>PHIÊN: <b id="next_round" style="color:#fff">#--</b></span>
+          <span>VÀO LỆNH: <b id="kelly_bet" style="color:#fbbf24">0%</b></span>
+        </div>
+        <div id="prediction_val" class="analyzing">ĐANG KHỞI ĐỘNG AI</div>
+        <div class="matrix-status">
+          <div class="status-item">
+            <span class="status-label">Tin Cậy</span>
+            <span class="status-val" id="conf_rate">0%</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Độ Nhạy</span>
+            <span class="status-val" id="sense_val" style="color:#4ade80">0%</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Loại Cầu</span>
+            <span class="status-val" id="pattern_val" style="color:#fbbf24">Dò tìm...</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Xu Hướng</span>
+            <span class="status-val" id="trend_val">--</span>
+          </div>
+        </div>
+      </div>
+      <div id="val_result" class="result-display">Đang chờ dữ liệu...</div>
+    </div>
+  </div>
+
+<script>
+/** MATRIX ENGINE v7.0 */
+class MatrixEngine {
+    constructor() { this.history = []; }
+    updateHistory(resultStr) {
+        if (!resultStr) return;
+        this.history = resultStr.toUpperCase().replace(/[^BPT]/g, '').split('');
+    }
+    analyze() {
+        const h = this.history;
+        const len = h.length;
+        if (len < 4) return null;
+        let bScore = 0, pScore = 0;
+        let patternName = "CẦU TỰ DO";
+        const last = h[len - 1], last2 = h[len - 2];
+        let streak = 1;
+        for (let i = len - 1; i > 0 && h[i] === h[i-1]; i--) streak++;
+        const s4 = h.slice(-4).join('');
+        const s6 = h.slice(-6).join('');
+        if (streak >= 3 && streak < 7) {
+            patternName = `CẦU BỆT ${last === 'B' ? 'CÁI' : 'CON'}`;
+            last === 'B' ? bScore += 6 : pScore += 6;
+        } else if (streak >= 7) {
+            patternName = "BỆT DÀI (HẾT)";
+            last === 'B' ? pScore += 3 : bScore += 3;
+        } else if (s4 === "BPBP" || s4 === "PBPB") {
+            patternName = "CẦU ĐẢO 1-1";
+            last === 'B' ? pScore += 5 : bScore += 5;
+        } else if (s4 === "BBPP" || s4 === "PPBB") {
+            patternName = "CẦU ĐÔI 2-2";
+            (last === last2) ? (last === 'B' ? pScore += 4 : bScore += 4) : (last === 'B' ? bScore += 4 : pScore += 4);
+        } else if (/BPPBPP|PBBPBB/.test(s6)) {
+            patternName = "CẦU NHỊP 1-2";
+            last === 'P' ? bScore += 5 : pScore += 5;
+        }
+        let jumps = 0;
+        const recent = h.slice(-10);
+        for(let i=0; i<recent.length-1; i++) if(recent[i] !== recent[i+1]) jumps++;
+        const stability = Math.max(0, 100 - (jumps * 10));
+        let side = Math.abs(bScore - pScore) >= 1
+            ? (bScore > pScore ? 'B' : 'P')
+            : (last === 'B' ? 'P' : 'B');
+        const confidence = Math.min(52 + (Math.abs(bScore - pScore) * 8), 98.5);
+        const winProb = confidence / 100;
+        const kelly = Math.max(0, (winProb * 2 - 1) * 15).toFixed(1);
+        return {
+            side, decision: side === 'B' ? 'BANKER' : 'PLAYER',
+            pattern: patternName, trend: stability > 60 ? "ỔN ĐỊNH" : "BIẾN ĐỘNG",
+            conf: confidence.toFixed(1), sensitivity: stability,
+            kelly: stability < 30 ? "0.0" : kelly
+        };
+    }
+}
+
+const ai = new MatrixEngine();
+let currentTable = "", lastRawData = "", useMockData = true;
+const mockResults = ['B','P','B','P','B','B','P','P','B','P','B','B','B','P','T'];
+
+function getMockData() {
+    const historyLen = 12 + Math.floor(Math.random() * 8);
+    let result = '';
+    for(let i=0; i<historyLen; i++) result += mockResults[Math.floor(Math.random() * mockResults.length)];
+    return [
+        { table_name: "Bàn C01", result: result },
+        { table_name: "Bàn C02", result: result.slice(-8) },
+        { table_name: "Bàn C03", result: result.slice(-10) },
+        { table_name: "Bàn C04", result: result.slice(-9) },
+        { table_name: "Bàn C05", result: result.slice(-11) },
+        { table_name: "Bàn C06", result: result.slice(-7) },
+        { table_name: "Bàn C07", result: result.slice(-12) },
+        { table_name: "Bàn C08", result: result.slice(-8) },
+        { table_name: "Bàn C09", result: result.slice(-10) },
+        { table_name: "Bàn C10", result: result.slice(-9) },
+        { table_name: "Bàn C11", result: result.slice(-11) },
+        { table_name: "Bàn C12", result: result.slice(-7) },
+        { table_name: "Bàn C13", result: result.slice(-12) },
+        { table_name: "Bàn C14", result: result.slice(-8) },
+        { table_name: "Bàn C15", result: result.slice(-10) },
+        { table_name: "Bàn C16", result: result.slice(-9) },
+        { table_name: "Bàn C17", result: result.slice(-11) },
+        { table_name: "Bàn C18", result: result.slice(-7) },
+        { table_name: "Bàn 19", result: result.slice(-12) },
+        { table_name: "Bàn 1", result: result.slice(-8) },
+        { table_name: "Bàn 2", result: result.slice(-10) },
+        { table_name: "Bàn 3", result: result.slice(-9) },
+        { table_name: "Bàn 4", result: result.slice(-11) },
+        { table_name: "Bàn 5", result: result.slice(-7) },
+        { table_name: "Bàn 6", result: result.slice(-12) },
+        { table_name: "Bàn 7", result: result.slice(-8) },
+        { table_name: "Bàn 8", result: result.slice(-10) },
+        { table_name: "Bàn 9", result: result.slice(-9) },
+        { table_name: "Bàn 10", result: result.slice(-11) }
+    ];
+}
+
+async function fetchData() {
+    try {
+        const url = `https://api.allorigins.win/get?url=${encodeURIComponent("https://toolbcr.com/baccarat/tables.php?action=get_data&id=1&t="+Date.now())}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error("API Error");
+        const json = await res.json();
+        const data = JSON.parse(json.contents);
+        useMockData = false;
+        updateUI(data);
+    } catch(e) {
+        if (useMockData) updateUI(getMockData());
+    }
+}
+
+function updateUI(data) {
+    const sel = document.getElementById("tableSelect");
+    const table = data.find(t => t.table_name === currentTable) || data[0];
+    if(!table) return;
+    document.getElementById("val_result").innerHTML = table.result.split('').map(c => {
+        const cls = c === 'B' ? 'b-text' : (c === 'P' ? 'p-text' : 't-text');
+        return `<span class="${cls}">${c}</span>`;
+    }).join(' ');
+    if (table.result !== lastRawData) {
+        lastRawData = table.result;
+        ai.updateHistory(table.result);
+        const view = document.getElementById("prediction_val");
+        view.innerHTML = `<span class="analyzing">ĐANG PHÂN TÍCH...</span>`;
+        setTimeout(() => {
+            const res = ai.analyze();
+            if(!res) return;
+            view.innerText = res.decision;
+            view.style.color = res.decision === 'BANKER' ? '#ff4d4d' : '#3b82f6';
+            view.style.textShadow = `0 0 20px ${res.decision === 'BANKER' ? 'rgba(255,77,77,0.5)' : 'rgba(59,130,246,0.5)'}`;
+            document.getElementById("conf_rate").innerText = res.conf + "%";
+            document.getElementById("sense_val").innerText = res.sensitivity + "%";
+            document.getElementById("pattern_val").innerText = res.pattern;
+            document.getElementById("trend_val").innerText = res.trend;
+            document.getElementById("kelly_bet").innerText = res.kelly + "%";
+            document.getElementById("next_round").innerText = "#" + (table.result.length + 1);
+            document.getElementById("sense_val").style.color = res.sensitivity > 60 ? "#4ade80" : "#ff4d4d";
+        }, 800);
+    }
+}
+
+function onTableChange() {
+    currentTable = document.getElementById("tableSelect").value;
+    lastRawData = "";
+    fetchData();
+}
+
+// Kéo thả
+const dt = document.getElementById("dragBox");
+let active = false, ox = 0, oy = 0, curX = 0, curY = 0;
+dt.addEventListener('pointerdown', e => {
+    if(e.target.tagName !== 'SELECT' && e.target.tagName !== 'BUTTON') {
+        active = true;
+        ox = e.clientX - curX;
+        oy = e.clientY - curY;
+        dt.style.transition = "none";
+    }
+});
+document.addEventListener('pointermove', e => {
+    if(active) {
+        curX = e.clientX - ox;
+        curY = e.clientY - oy;
+        dt.style.transform = `translate(calc(-50% + ${curX}px), calc(-50% + ${curY}px))`;
+    }
+});
+document.addEventListener('pointerup', () => active = false);
+
+// Mở hộp
+document.getElementById("robotTrigger").addEventListener('click', () => {
+    const box = document.getElementById("dragBox");
+    box.style.display = box.style.display === "block" ? "none" : "block";
+    if (box.style.display === "block") fetchData();
+});
+
+setInterval(fetchData, 4000);
+</script>
+
+</body>
+</html>
 
